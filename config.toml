@@ -1,14 +1,14 @@
 port = 8989
-cors=true
-gin_logger=true
-dsn="root@tcp(localhost)/cross_share"
-jwt_key="secretKey"
+cors = true
+gin_logger = true
+dsn = "root@tcp(localhost)/cross_share"
+jwt_key = "secretKey"
 # unit: minute
-expire=100
+expire = 100
 
-log_level="debug"
+log_level = "debug"
 
 # unit: second
-check_interval=2
+check_interval = 5
 # unit: second
-expire_limit = 10
+expire_limit = 60

@@ -30,6 +30,40 @@ type userConn struct {
 	CloseChan chan struct{}
 }
 
+// ReadLoop TODO
+// 2019/10/12 23:30:08
+func (uc *userConn) ReadLoop() {
+	for {
+		select {
+		case <-uc.CloseChan:
+			log.Debugf("Close readLoop of user: %v", uc.User)
+			return
+		default:
+			_, data, err := uc.Conn.ReadMessage()
+			if err != nil {
+				log.Errorf("read data from user: %v error: %v", uc.User, err)
+				continue
+			}
+			var clientMsg message
+			r := bytes.NewReader(data)
+			err = json.NewDecoder(r).Decode(&clientMsg)
+			if err != nil {
+				log.Error("decode msg from user: %v error: %v", uc.User, err)
+				continue
+			}
+			switch clientMsg.Event {
+			case "PING":
+				log.Debugf("Get PING from %v", uc.User)
+				uc.Conn.WriteMessage(websocket.TextMessage, []byte("PONG"))
+				userEventConns.updatePingTime(uc.User, uc.Conn)
+			default:
+				//other event for future use
+			}
+		}
+	}
+
+}
+
 // NewUserEventConns TODO
 // 2019/10/12 17:23:41
 func NewUserEventConns() *UserEventConns {
@@ -71,6 +105,8 @@ func (c *UserEventConns) Remove(user string, event string, conn *userConn) {
 	}
 	if indexOfConn >= 0 && indexOfConn < len(conns) {
 		conns[indexOfConn].Conn.Close()
+		close(conns[indexOfConn].CloseChan)
+
 		conns = append(conns[:indexOfConn], conns[indexOfConn+1:]...)
 		eventConns[event] = conns
 		c.conns[user] = eventConns
@@ -106,7 +142,7 @@ func (c *UserEventConns) Check() {
 		for {
 			select {
 			case <-ticker.C:
-				log.Infof("check...")
+				log.Debugf("check...")
 				c.check()
 			}
 		}
@@ -136,7 +172,7 @@ func (c *UserEventConns) updatePingTime(user string, wsConn *websocket.Conn) {
 			for _, conn := range conns {
 				if conn.Conn == wsConn {
 					conn.LastPing = time.Now().Unix()
-					log.Infof("Update Ping time of user: %v event: %v", user, event)
+					log.Debugf("Update Ping time of user: %v event: %v", user, event)
 					return
 				}
 			}
@@ -172,55 +208,49 @@ func Websocket(c *gin.Context) {
 		})
 		return
 	}
-	var user string
-	for {
-		_, data, err := conn.ReadMessage()
-		if err != nil {
-			msg := fmt.Sprintf("read message from client error: %v", err)
-			log.Error(msg)
-			conn.Close()
-			return
-		}
-		var clientMsg message
-		r := bytes.NewReader(data)
-		err = json.NewDecoder(r).Decode(&clientMsg)
-		if err != nil {
-			msg := fmt.Sprintf("decode subscribe message error: %v", err)
-			log.Error(msg)
-			conn.WriteMessage(websocket.TextMessage, []byte("not json"))
-			continue
-		}
-		log.Infof("subscribe data: %+v", clientMsg)
-
-		switch clientMsg.Event {
-		case "PING":
-			if user == "" {
-				log.Error("Must register event before PING")
-				conn.Close()
-				return
-			}
-			log.Debugf("Get PING from %v", user)
-			conn.WriteMessage(websocket.TextMessage, []byte("PONG"))
-			userEventConns.updatePingTime(user, conn)
-		default:
-			// parse token
-			t, err := utils.ParseToken(clientMsg.Token, []byte(viper.GetString("jwt_key")))
-			if err != nil {
-				msg := fmt.Sprintf("parse token error: %v", err)
-				log.Error(msg)
-				continue
-			}
-			user = t.Claims.(jwt.MapClaims)["user"].(string)
-			log.Infof("New clientMsg user: %v", user)
-
-			userEventConns.Add(user, clientMsg.Event, &userConn{
-				Conn:      conn,
-				User:      user,
-				LastPing:  time.Now().Unix(),
-				CloseChan: make(chan struct{}),
-			})
-		}
-
+	_, data, err := conn.ReadMessage()
+	if err != nil {
+		msg := fmt.Sprintf("read message from client error: %v", err)
+		log.Error(msg)
+		conn.Close()
+		return
+	}
+	var clientMsg message
+	r := bytes.NewReader(data)
+	err = json.NewDecoder(r).Decode(&clientMsg)
+	if err != nil {
+		msg := fmt.Sprintf("decode subscribe message error: %v", err)
+		conn.WriteMessage(websocket.TextMessage, []byte(msg))
+		log.Error(msg)
+		return
 	}
 
+	event := clientMsg.Event
+	if event == "PING" {
+		msg := fmt.Sprintf("Must register event before PING")
+		log.Error(msg)
+		conn.Close()
+		return
+	}
+
+	t, err := utils.ParseToken(clientMsg.Token, []byte(viper.GetString("jwt_key")))
+	if err != nil {
+		msg := fmt.Sprintf("parse token error: %v", err)
+		log.Error(msg)
+		conn.Close()
+		return
+	}
+
+	user := t.Claims.(jwt.MapClaims)["user"].(string)
+	log.Infof("New clientMsg from user: %v with event: %v", user, event)
+
+	uConn := &userConn{
+		Conn:      conn,
+		User:      user,
+		LastPing:  time.Now().Unix(),
+		CloseChan: make(chan struct{}),
+	}
+	userEventConns.Add(user, event, uConn)
+
+	uConn.ReadLoop()
 }

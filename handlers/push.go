@@ -37,4 +37,8 @@ func Push(c *gin.Context) {
 		return
 	}
 	userEventConns.Push(user, pm.Event, []byte(pm.Message))
+	c.JSON(200, gin.H{
+		"code": 0,
+		"msg":  "OK",
+	})
 }
