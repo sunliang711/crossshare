@@ -37,7 +37,7 @@ func Login(c *gin.Context) {
 	}
 	token, err := utils.GenToken([]byte(viper.GetString("jwt_key")), map[string]interface{}{
 		"user": user.User,
-		"exp":  time.Now().Add(time.Duration(viper.GetInt("expire")) * 60 * time.Second).Unix(),
+		"exp":  time.Now().Add(time.Duration(viper.GetInt("expire")) * time.Minute).Unix(),
 	})
 	if err != nil {
 		msg := fmt.Sprintf("gen token error: %v", err)

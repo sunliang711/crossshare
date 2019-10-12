@@ -3,4 +3,4 @@ cors=true
 gin_logger=true
 dsn="root@tcp(localhost)/cross_share"
 jwt_key="secretKey"
-expire=1
+expire=100

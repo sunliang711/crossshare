@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title></title>
+</head>
+
+<body>
+    <script>
+        var ws = new WebSocket("ws://localhost:8989/ws");
+        ws.onopen = function (event) {
+            console.log("Connection open ...");
+            ws.send('{"token":"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE1NzA4ODI1ODAsInVzZXIiOiJlYWdsZSJ9.iJvAR-kWZ0by1fDJnCWm3FVkO2CDyEtfPMrwO2B9qk8","event":"text"}')
+        };
+        ws.onmessage = function (event) {
+            console.log("received message: " + event.data);
+        }
+        ws.onclose = function (event) {
+            console.log("connection closed.")
+        }
+    </script>
+</body>
+
+</html>

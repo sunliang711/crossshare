@@ -33,9 +33,10 @@ func main() {
 	// handler
 	srv.POST("/login", handlers.Login)
 	srv.POST("/register", handlers.Register)
+
+	srv.GET("/ws", handlers.Websocket)
 	// middleware
 	srv.Use(handlers.ParseToken)
-
 	srv.GET("/share", handlers.GetShare)
 	srv.POST("/push", handlers.Push)
 

@@ -78,6 +78,7 @@ func (c *UserEventConns) Push(user string, event string, message []byte) {
 	for i := range conns {
 		err := conns[i].WriteMessage(websocket.TextMessage, message)
 		if err != nil {
+			log.Infof("Remove user: %v event: %v conns: %v", user, event, i)
 			c.Remove(user, event, conns[i])
 		}
 	}
@@ -117,10 +118,11 @@ func Websocket(c *gin.Context) {
 		if err != nil {
 			msg := fmt.Sprintf("read token msg error: %v", err)
 			log.Error(msg)
-			c.JSON(500, gin.H{
-				"code": 1,
-				"msg":  msg,
-			})
+			// c.JSON(500, gin.H{
+			// 	"code": 1,
+			// 	"msg":  msg,
+			// })
+			conn.Close()
 			return
 		}
 		var sub subscribe
@@ -129,11 +131,12 @@ func Websocket(c *gin.Context) {
 		if err != nil {
 			msg := fmt.Sprintf("decode subscribe message error: %v", err)
 			log.Error(msg)
-			c.JSON(400, gin.H{
-				"code": 1,
-				"msg":  msg,
-			})
-			return
+			// c.JSON(400, gin.H{
+			// 	"code": 1,
+			// 	"msg":  msg,
+			// })
+			conn.WriteMessage(websocket.TextMessage, []byte("not json"))
+			continue
 		}
 		log.Infof("subscribe data: %+v", sub)
 
@@ -142,14 +145,14 @@ func Websocket(c *gin.Context) {
 		if err != nil {
 			msg := fmt.Sprintf("parse token error: %v", err)
 			log.Error(msg)
-			c.JSON(400, gin.H{
-				"code": 1,
-				"msg":  msg,
-			})
-			return
+			// c.JSON(400, gin.H{
+			// 	"code": 1,
+			// 	"msg":  msg,
+			// })
+			continue
 		}
 		user := t.Claims.(jwt.MapClaims)["user"].(string)
-		log.Infof("sub user: %v", user)
+		log.Infof("New sub user: %v", user)
 
 		//TODO: when write to this conn,remove it
 		userEventConns.Add(user, sub.Event, conn)
