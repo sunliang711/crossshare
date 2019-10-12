@@ -9,14 +9,18 @@
 <body>
     <script>
         var ws = new WebSocket("ws://localhost:8989/ws");
+        var interval
+        var count = 0
         ws.onopen = function (event) {
             console.log("Connection open ...");
-            ws.send('{"token":"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE1NzA4ODI1ODAsInVzZXIiOiJlYWdsZSJ9.iJvAR-kWZ0by1fDJnCWm3FVkO2CDyEtfPMrwO2B9qk8","event":"text"}')
+            ws.send('{"token":"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE1NzA4ODg3MTgsInVzZXIiOiJlYWdsZSJ9.qJmmFcyvWfZejE2iW5zO7rirHLZNeR_1fdWcRZtWUuE","event":"text"}')
+            interval = setInterval(function () { ws.send('{"event":"PING"}'); count++; console.log(count); if (count == 50) { clearInterval(interval); } }, 2000)
         };
         ws.onmessage = function (event) {
             console.log("received message: " + event.data);
         }
         ws.onclose = function (event) {
+            clearInterval(interval)
             console.log("connection closed.")
         }
     </script>

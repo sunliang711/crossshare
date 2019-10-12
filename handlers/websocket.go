@@ -58,6 +58,7 @@ func (c *UserEventConns) Remove(user string, event string, conn *websocket.Conn)
 		}
 	}
 	if indexOfConn >= 0 && indexOfConn < len(conns) {
+		conns[indexOfConn].Close()
 		conns = append(conns[:indexOfConn], conns[indexOfConn:]...)
 		eventConns[event] = conns
 		c.conns[user] = eventConns
@@ -84,7 +85,19 @@ func (c *UserEventConns) Push(user string, event string, message []byte) {
 	}
 }
 
+// Check TODO
+// 2019/10/12 20:00:28
+func (c *UserEventConns) Check() {
+	go func(c *UserEventConns) {
+		// check every conns's PING packet
+	}(c)
+}
+
 var userEventConns = NewUserEventConns()
+
+func init() {
+	userEventConns.Check()
+}
 
 var upgrader = websocket.Upgrader{
 	CheckOrigin: func(r *http.Request) bool {
@@ -118,10 +131,6 @@ func Websocket(c *gin.Context) {
 		if err != nil {
 			msg := fmt.Sprintf("read token msg error: %v", err)
 			log.Error(msg)
-			// c.JSON(500, gin.H{
-			// 	"code": 1,
-			// 	"msg":  msg,
-			// })
 			conn.Close()
 			return
 		}
@@ -131,31 +140,30 @@ func Websocket(c *gin.Context) {
 		if err != nil {
 			msg := fmt.Sprintf("decode subscribe message error: %v", err)
 			log.Error(msg)
-			// c.JSON(400, gin.H{
-			// 	"code": 1,
-			// 	"msg":  msg,
-			// })
 			conn.WriteMessage(websocket.TextMessage, []byte("not json"))
-			continue
+			return
 		}
 		log.Infof("subscribe data: %+v", sub)
 
-		// parse token
-		t, err := utils.ParseToken(sub.Token, []byte(viper.GetString("jwt_key")))
-		if err != nil {
-			msg := fmt.Sprintf("parse token error: %v", err)
-			log.Error(msg)
-			// c.JSON(400, gin.H{
-			// 	"code": 1,
-			// 	"msg":  msg,
-			// })
-			continue
-		}
-		user := t.Claims.(jwt.MapClaims)["user"].(string)
-		log.Infof("New sub user: %v", user)
+		switch sub.Event {
+		case "PING":
+			//TODO get username instead of RemoteAddr
+			log.Infof("Get PING from %v", conn.RemoteAddr())
+			conn.WriteMessage(websocket.TextMessage, []byte("PONG"))
+		default:
+			// parse token
+			t, err := utils.ParseToken(sub.Token, []byte(viper.GetString("jwt_key")))
+			if err != nil {
+				msg := fmt.Sprintf("parse token error: %v", err)
+				log.Error(msg)
+				return
+			}
+			user := t.Claims.(jwt.MapClaims)["user"].(string)
+			log.Infof("New sub user: %v", user)
 
-		//TODO: when write to this conn,remove it
-		userEventConns.Add(user, sub.Event, conn)
+			userEventConns.Add(user, sub.Event, conn)
+		}
+
 	}
 
 }

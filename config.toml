@@ -3,4 +3,7 @@ cors=true
 gin_logger=true
 dsn="root@tcp(localhost)/cross_share"
 jwt_key="secretKey"
+# unit: minute
 expire=100
+#
+check_ping_interval=100
