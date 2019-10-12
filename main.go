@@ -11,6 +11,7 @@ import (
 	// read config
 	_ "github.com/sunliang711/crossshare/config"
 	"github.com/sunliang711/crossshare/handlers"
+	"github.com/sunliang711/crossshare/utils"
 )
 
 // 2019/10/08 18:36:30
@@ -18,6 +19,9 @@ func main() {
 	ginLogger := viper.GetBool("gin_logger")
 	enableCors := viper.GetBool("cors")
 	port := viper.GetInt("port")
+	logLevel := viper.GetString("log_level")
+
+	log.SetLevel(utils.LogLevel(logLevel))
 
 	gin.SetMode(gin.ReleaseMode)
 	srv := gin.New()

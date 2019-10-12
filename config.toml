@@ -6,7 +6,9 @@ jwt_key="secretKey"
 # unit: minute
 expire=100
 
+log_level="debug"
+
 # unit: second
-check_interval=5
+check_interval=2
 # unit: second
-expire_limit = 60
+expire_limit = 10

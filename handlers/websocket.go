@@ -24,9 +24,10 @@ type UserEventConns struct {
 // userConn TODO
 // 2019/10/12 20:42:17
 type userConn struct {
-	Conn     *websocket.Conn
-	User     string
-	LastPing int64
+	Conn      *websocket.Conn
+	User      string
+	LastPing  int64
+	CloseChan chan struct{}
 }
 
 // NewUserEventConns TODO
@@ -70,7 +71,7 @@ func (c *UserEventConns) Remove(user string, event string, conn *userConn) {
 	}
 	if indexOfConn >= 0 && indexOfConn < len(conns) {
 		conns[indexOfConn].Conn.Close()
-		conns = append(conns[:indexOfConn], conns[indexOfConn:]...)
+		conns = append(conns[:indexOfConn], conns[indexOfConn+1:]...)
 		eventConns[event] = conns
 		c.conns[user] = eventConns
 	}
@@ -119,13 +120,28 @@ func (c *UserEventConns) check() {
 		for event, conns := range eventConns {
 			for _, conn := range conns {
 				if time.Now().Unix()-conn.LastPing > viper.GetInt64("expire_limit") {
-					log.Infof("conn of user: %v with event: %v expired,remove it", user, event)
+					log.Infof("Remove expired conn: %v, user: %v, event: %v", conn.Conn.RemoteAddr(), user, event)
 					c.Remove(user, event, conn)
 				}
 			}
 		}
 	}
+}
 
+// updatePingTime TODO
+// 2019/10/12 22:19:01
+func (c *UserEventConns) updatePingTime(user string, wsConn *websocket.Conn) {
+	if eventConns, exist := c.conns[user]; exist {
+		for event, conns := range eventConns {
+			for _, conn := range conns {
+				if conn.Conn == wsConn {
+					conn.LastPing = time.Now().Unix()
+					log.Infof("Update Ping time of user: %v event: %v", user, event)
+					return
+				}
+			}
+		}
+	}
 }
 
 var userEventConns = NewUserEventConns()
@@ -178,22 +194,31 @@ func Websocket(c *gin.Context) {
 
 		switch clientMsg.Event {
 		case "PING":
-			//TODO get username instead of RemoteAddr
-			log.Infof("Get PING from %v", user)
+			if user == "" {
+				log.Error("Must register event before PING")
+				conn.Close()
+				return
+			}
+			log.Debugf("Get PING from %v", user)
 			conn.WriteMessage(websocket.TextMessage, []byte("PONG"))
+			userEventConns.updatePingTime(user, conn)
 		default:
 			// parse token
 			t, err := utils.ParseToken(clientMsg.Token, []byte(viper.GetString("jwt_key")))
 			if err != nil {
 				msg := fmt.Sprintf("parse token error: %v", err)
 				log.Error(msg)
-				conn.Close()
-				return
+				continue
 			}
 			user = t.Claims.(jwt.MapClaims)["user"].(string)
 			log.Infof("New clientMsg user: %v", user)
 
-			userEventConns.Add(user, clientMsg.Event, &userConn{conn, user, time.Now().Unix()})
+			userEventConns.Add(user, clientMsg.Event, &userConn{
+				Conn:      conn,
+				User:      user,
+				LastPing:  time.Now().Unix(),
+				CloseChan: make(chan struct{}),
+			})
 		}
 
 	}
