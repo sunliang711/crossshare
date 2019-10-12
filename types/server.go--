@@ -1,0 +1,59 @@
+package types
+
+import (
+	"fmt"
+
+	"github.com/gin-contrib/cors"
+	"github.com/gin-gonic/gin"
+)
+
+// Server TODO
+// 2019/10/08 18:44:35
+type Server struct {
+	GinLogger bool
+	Port      int
+	Cors      bool
+	engine    *gin.Engine
+}
+
+// NewServer TODO
+// 2019/10/12 14:42:24
+func NewServer(port int) *Server {
+	gin.SetMode(gin.ReleaseMode)
+	srv := &Server{
+		GinLogger: true,
+		Port:      port,
+		Cors:      true,
+	}
+	return srv
+}
+
+// Use register middleware
+// 2019/10/12 14:53:13
+func (srv *Server) Use(middleware ...gin.HandlerFunc) gin.IRoutes {
+	return srv.engine.Use(middleware...)
+}
+
+// GET register 'GET' handlers
+// 2019/10/12 14:51:42
+func (srv *Server) GET(path string, handlers ...gin.HandlerFunc) gin.IRoutes {
+	return srv.engine.GET(path, handlers...)
+}
+
+// POST register 'POST' handlers
+// 2019/10/12 14:51:52
+func (srv *Server) POST(path string, handlers ...gin.HandlerFunc) gin.IRoutes {
+	return srv.engine.POST(path, handlers...)
+}
+
+// Run TODO
+// 2019/10/12 14:43:37
+func (srv *Server) Run() error {
+	if srv.GinLogger {
+		srv.engine.Use(gin.Logger())
+	}
+	if srv.Cors {
+		srv.engine.Use(cors.Default())
+	}
+	return srv.engine.Run(fmt.Sprintf("%d", srv.Port))
+}
