@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"time"
 
 	"github.com/dgrijalva/jwt-go"
 	"github.com/gin-gonic/gin"
@@ -17,23 +18,33 @@ import (
 // UserEventConns TODO
 // 2019/10/12 17:21:55
 type UserEventConns struct {
-	conns map[string]map[string][]*websocket.Conn
+	conns map[string]map[string][]*userConn
+}
+
+// userConn TODO
+// 2019/10/12 20:42:17
+type userConn struct {
+	Conn     *websocket.Conn
+	User     string
+	LastPing int64
 }
 
 // NewUserEventConns TODO
 // 2019/10/12 17:23:41
 func NewUserEventConns() *UserEventConns {
-	return &UserEventConns{
-		conns: make(map[string]map[string][]*websocket.Conn),
+	uec := &UserEventConns{
+		conns: make(map[string]map[string][]*userConn),
 	}
+	go uec.Check()
+	return uec
 }
 
 // Add TODO
 // 2019/10/12 17:22:47
-func (c *UserEventConns) Add(user string, event string, conn *websocket.Conn) {
+func (c *UserEventConns) Add(user string, event string, conn *userConn) {
 	eventConns, exist := c.conns[user]
 	if !exist {
-		eventConns = make(map[string][]*websocket.Conn)
+		eventConns = make(map[string][]*userConn)
 	}
 	eventConns[event] = append(eventConns[event], conn)
 	c.conns[user] = eventConns
@@ -41,7 +52,7 @@ func (c *UserEventConns) Add(user string, event string, conn *websocket.Conn) {
 
 // Remove TODO
 // 2019/10/12 17:26:45
-func (c *UserEventConns) Remove(user string, event string, conn *websocket.Conn) {
+func (c *UserEventConns) Remove(user string, event string, conn *userConn) {
 	eventConns, exist := c.conns[user]
 	if !exist {
 		return
@@ -58,7 +69,7 @@ func (c *UserEventConns) Remove(user string, event string, conn *websocket.Conn)
 		}
 	}
 	if indexOfConn >= 0 && indexOfConn < len(conns) {
-		conns[indexOfConn].Close()
+		conns[indexOfConn].Conn.Close()
 		conns = append(conns[:indexOfConn], conns[indexOfConn:]...)
 		eventConns[event] = conns
 		c.conns[user] = eventConns
@@ -77,7 +88,7 @@ func (c *UserEventConns) Push(user string, event string, message []byte) {
 		return
 	}
 	for i := range conns {
-		err := conns[i].WriteMessage(websocket.TextMessage, message)
+		err := conns[i].Conn.WriteMessage(websocket.TextMessage, message)
 		if err != nil {
 			log.Infof("Remove user: %v event: %v conns: %v", user, event, i)
 			c.Remove(user, event, conns[i])
@@ -90,14 +101,34 @@ func (c *UserEventConns) Push(user string, event string, message []byte) {
 func (c *UserEventConns) Check() {
 	go func(c *UserEventConns) {
 		// check every conns's PING packet
+		ticker := time.NewTicker(time.Duration(viper.GetInt("check_interval")) * time.Second)
+		for {
+			select {
+			case <-ticker.C:
+				log.Infof("check...")
+				c.check()
+			}
+		}
 	}(c)
 }
 
-var userEventConns = NewUserEventConns()
+// check TODO
+// 2019/10/12 20:55:31
+func (c *UserEventConns) check() {
+	for user, eventConns := range c.conns {
+		for event, conns := range eventConns {
+			for _, conn := range conns {
+				if time.Now().Unix()-conn.LastPing > viper.GetInt64("expire_limit") {
+					log.Infof("conn of user: %v with event: %v expired,remove it", user, event)
+					c.Remove(user, event, conn)
+				}
+			}
+		}
+	}
 
-func init() {
-	userEventConns.Check()
 }
+
+var userEventConns = NewUserEventConns()
 
 var upgrader = websocket.Upgrader{
 	CheckOrigin: func(r *http.Request) bool {
@@ -105,9 +136,9 @@ var upgrader = websocket.Upgrader{
 	},
 }
 
-// subscribe TODO
+// message TODO
 // 2019/10/12 17:01:58
-type subscribe struct {
+type message struct {
 	Token string `json:"token"`
 	Event string `json:"event"`
 }
@@ -125,43 +156,44 @@ func Websocket(c *gin.Context) {
 		})
 		return
 	}
+	var user string
 	for {
-		// read token
 		_, data, err := conn.ReadMessage()
 		if err != nil {
-			msg := fmt.Sprintf("read token msg error: %v", err)
+			msg := fmt.Sprintf("read message from client error: %v", err)
 			log.Error(msg)
 			conn.Close()
 			return
 		}
-		var sub subscribe
+		var clientMsg message
 		r := bytes.NewReader(data)
-		err = json.NewDecoder(r).Decode(&sub)
+		err = json.NewDecoder(r).Decode(&clientMsg)
 		if err != nil {
 			msg := fmt.Sprintf("decode subscribe message error: %v", err)
 			log.Error(msg)
 			conn.WriteMessage(websocket.TextMessage, []byte("not json"))
-			return
+			continue
 		}
-		log.Infof("subscribe data: %+v", sub)
+		log.Infof("subscribe data: %+v", clientMsg)
 
-		switch sub.Event {
+		switch clientMsg.Event {
 		case "PING":
 			//TODO get username instead of RemoteAddr
-			log.Infof("Get PING from %v", conn.RemoteAddr())
+			log.Infof("Get PING from %v", user)
 			conn.WriteMessage(websocket.TextMessage, []byte("PONG"))
 		default:
 			// parse token
-			t, err := utils.ParseToken(sub.Token, []byte(viper.GetString("jwt_key")))
+			t, err := utils.ParseToken(clientMsg.Token, []byte(viper.GetString("jwt_key")))
 			if err != nil {
 				msg := fmt.Sprintf("parse token error: %v", err)
 				log.Error(msg)
+				conn.Close()
 				return
 			}
-			user := t.Claims.(jwt.MapClaims)["user"].(string)
-			log.Infof("New sub user: %v", user)
+			user = t.Claims.(jwt.MapClaims)["user"].(string)
+			log.Infof("New clientMsg user: %v", user)
 
-			userEventConns.Add(user, sub.Event, conn)
+			userEventConns.Add(user, clientMsg.Event, &userConn{conn, user, time.Now().Unix()})
 		}
 
 	}

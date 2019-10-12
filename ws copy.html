@@ -14,7 +14,7 @@
         ws.onopen = function (event) {
             console.log("Connection open ...");
             ws.send('{"token":"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE1NzA4ODg3MTgsInVzZXIiOiJlYWdsZSJ9.qJmmFcyvWfZejE2iW5zO7rirHLZNeR_1fdWcRZtWUuE","event":"text"}')
-            interval = setInterval(function () { ws.send('{"event":"PING"}'); count++; console.log(count); if (count == 50) { clearInterval(interval); } }, 2000)
+            interval = setInterval(function () { ws.send('{"event":"PING"}'); count++; console.log(count); if (count == 5000) { clearInterval(interval); } }, 5000)
         };
         ws.onmessage = function (event) {
             console.log("received message: " + event.data);
