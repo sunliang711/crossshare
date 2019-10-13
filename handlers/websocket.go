@@ -30,6 +30,18 @@ type userConn struct {
 	CloseChan chan struct{}
 }
 
+const (
+	eventPing = "PING"
+	eventPong = "PONG"
+	eventAll  = "ALL"
+)
+
+// pongPacket TODO
+// 2019/10/13 16:56:38
+func pongPacket() message {
+	return message{Event: eventPong}
+}
+
 // ReadLoop TODO
 // 2019/10/12 23:30:08
 func (uc *userConn) ReadLoop() {
@@ -52,9 +64,11 @@ func (uc *userConn) ReadLoop() {
 				continue
 			}
 			switch clientMsg.Event {
-			case "PING":
+			case eventPing:
 				log.Debugf("Get PING from %v", uc.User)
-				uc.Conn.WriteMessage(websocket.TextMessage, []byte("PONG"))
+				pong := pongPacket()
+				pkt, _ := json.Marshal(&pong)
+				uc.Conn.WriteMessage(websocket.TextMessage, pkt)
 				userEventConns.updatePingTime(uc.User, uc.Conn)
 			default:
 				//other event for future use
@@ -120,6 +134,9 @@ func (c *UserEventConns) Push(user string, event string, message []byte) {
 	if !exist {
 		return
 	}
+
+THERE:
+	log.Debugf(`Push event: "%v"`, event)
 	conns, exist := eventConns[event]
 	if !exist {
 		return
@@ -130,6 +147,12 @@ func (c *UserEventConns) Push(user string, event string, message []byte) {
 			log.Infof("Remove user: %v event: %v conns: %v", user, event, i)
 			c.Remove(user, event, conns[i])
 		}
+	}
+
+	// push eventAll
+	if event != eventAll {
+		event = eventAll
+		goto THERE
 	}
 }
 
@@ -191,7 +214,7 @@ var upgrader = websocket.Upgrader{
 // message TODO
 // 2019/10/12 17:01:58
 type message struct {
-	Token string `json:"token"`
+	Token string `json:"token,omitempty"`
 	Event string `json:"event"`
 }
 
