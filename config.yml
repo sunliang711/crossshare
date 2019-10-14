@@ -1,0 +1,14 @@
+port: 8989
+cors: true
+gin_logger: true
+dsn: root@tcp(localhost)/cross_share
+jwt_key: secretKey
+# token expire period,unit: minute
+expire: 14400
+
+log_level: debug
+
+# unit: second
+check_interval: 5
+# unit: second
+expire_limit: 60

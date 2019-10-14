@@ -31,15 +31,27 @@ type userConn struct {
 }
 
 const (
-	eventPing = "PING"
-	eventPong = "PONG"
-	eventAll  = "ALL"
+	eventPing                 = "PING"
+	eventPong                 = "PONG"
+	eventAll                  = "ALL"
+	eventTokenInvalid         = "TokenInvalid"
+	eventMessageFormatInvalid = "MsgFormatInvalid"
 )
 
 // pongPacket TODO
 // 2019/10/13 16:56:38
 func pongPacket() message {
 	return message{Event: eventPong}
+}
+
+// tokenInvalidPacket TODO
+// 2019/10/14 10:25:18
+func tokenInvalidPacket() message {
+	return message{Event: eventTokenInvalid}
+}
+
+func messageFormatInvalidPacket() message {
+	return message{Event: eventMessageFormatInvalid}
 }
 
 // ReadLoop TODO
@@ -129,7 +141,7 @@ func (c *UserEventConns) Remove(user string, event string, conn *userConn) {
 
 //Push TODO
 // 2019/10/12 17:48:15
-func (c *UserEventConns) Push(user string, event string, message []byte) {
+func (c *UserEventConns) Push(user string, event string, msg string) {
 	eventConns, exist := c.conns[user]
 	if !exist {
 		return
@@ -142,7 +154,9 @@ THERE:
 		return
 	}
 	for i := range conns {
-		err := conns[i].Conn.WriteMessage(websocket.TextMessage, message)
+		eventPkt := message{Event: event, Message: msg}
+		pkt, _ := json.Marshal(&eventPkt)
+		err := conns[i].Conn.WriteMessage(websocket.TextMessage, pkt)
 		if err != nil {
 			log.Infof("Remove user: %v event: %v conns: %v", user, event, i)
 			c.Remove(user, event, conns[i])
@@ -214,8 +228,9 @@ var upgrader = websocket.Upgrader{
 // message TODO
 // 2019/10/12 17:01:58
 type message struct {
-	Token string `json:"token,omitempty"`
-	Event string `json:"event"`
+	Token   string `json:"token,omitempty"`
+	Event   string `json:"event"`
+	Message string `json:"message,omitempty"`
 }
 
 // Websocket TODO
@@ -242,14 +257,15 @@ func Websocket(c *gin.Context) {
 	r := bytes.NewReader(data)
 	err = json.NewDecoder(r).Decode(&clientMsg)
 	if err != nil {
-		msg := fmt.Sprintf("decode subscribe message error: %v", err)
-		conn.WriteMessage(websocket.TextMessage, []byte(msg))
-		log.Error(msg)
+		msgFormatInvalid := messageFormatInvalidPacket()
+		pkt, _ := json.Marshal(msgFormatInvalid)
+		conn.WriteMessage(websocket.TextMessage, pkt)
+		log.Error(string(pkt))
 		return
 	}
 
 	event := clientMsg.Event
-	if event == "PING" {
+	if event == eventPing {
 		msg := fmt.Sprintf("Must register event before PING")
 		log.Error(msg)
 		conn.Close()
@@ -260,6 +276,9 @@ func Websocket(c *gin.Context) {
 	if err != nil {
 		msg := fmt.Sprintf("parse token error: %v", err)
 		log.Error(msg)
+		tokenInvalidPkt := tokenInvalidPacket()
+		pkt, _ := json.Marshal(tokenInvalidPkt)
+		conn.WriteMessage(websocket.TextMessage, pkt)
 		conn.Close()
 		return
 	}
