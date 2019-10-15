@@ -5,6 +5,8 @@ import { w3cwebsocket as W3CWebSocket } from 'websocket';
 import axios from 'axios';
 import TextItem from './TextItem'
 // import { CopyToClipboard } from 'react-copy-to-clipboard';
+import Login from './Login'
+import Sender from './sender'
 
 
 // const TextItem = props => {
@@ -92,24 +94,21 @@ class App extends React.Component {
         console.log(`status: ${JSON.stringify(status)}`)
         this.setState({ ...this.state, texts, status })
     }
+    login() {
+        console.log('login')
+    }
+    send() {
+        console.log('send')
+    }
     render() {
         return (
             <div>
-                <p>text</p>
+                <Login onClick={this.login} />
                 <ul>
                     {
                         this.state.texts.map((text, i) => {
                             let t = JSON.parse(text)
                             return (
-                                // <li id={i} key={i}>
-                                //     <CopyToClipboard
-                                //         onCopy={() => { this.onCopy(i) }} text={t.message}>
-                                //         <button>copy</button>
-                                //     </CopyToClipboard>
-                                //     <button onClick={() => { this.delete(i) }}> delete </button>
-                                //     {t.message}
-                                //     <span>{this.state.status[i]}</span>
-                                // </li>
                                 <TextItem
                                     id={i} key={i}
                                     onCopy={() => { this.onCopy(i) }}
@@ -122,6 +121,7 @@ class App extends React.Component {
                         })
                     }
                 </ul>
+                <Sender onClick={this.send}></Sender>
             </div>
         )
     }
