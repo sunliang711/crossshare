@@ -1,0 +1,16 @@
+.textItem{
+    background-color: darkcyan;
+    list-style-type: none;
+}
+
+.deleteBtn{
+    color: green;
+}
+
+.copyBtn{
+    color: red;
+}
+
+.status{
+    color: yellowgreen
+}

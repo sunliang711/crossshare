@@ -41,17 +41,17 @@ const (
 // pongPacket TODO
 // 2019/10/13 16:56:38
 func pongPacket() message {
-	return message{Event: eventPong}
+	return message{Event: eventPong, TimeStamp: time.Now().Unix()}
 }
 
 // tokenInvalidPacket TODO
 // 2019/10/14 10:25:18
 func tokenInvalidPacket() message {
-	return message{Event: eventTokenInvalid}
+	return message{Event: eventTokenInvalid, TimeStamp: time.Now().Unix()}
 }
 
 func messageFormatInvalidPacket() message {
-	return message{Event: eventMessageFormatInvalid}
+	return message{Event: eventMessageFormatInvalid, TimeStamp: time.Now().Unix()}
 }
 
 // ReadLoop TODO
@@ -154,7 +154,7 @@ THERE:
 		return
 	}
 	for i := range conns {
-		eventPkt := message{Event: event, Message: msg}
+		eventPkt := message{Event: event, Message: msg, TimeStamp: time.Now().Unix()}
 		pkt, _ := json.Marshal(&eventPkt)
 		err := conns[i].Conn.WriteMessage(websocket.TextMessage, pkt)
 		if err != nil {
@@ -228,9 +228,10 @@ var upgrader = websocket.Upgrader{
 // message TODO
 // 2019/10/12 17:01:58
 type message struct {
-	Token   string `json:"token,omitempty"`
-	Event   string `json:"event"`
-	Message string `json:"message,omitempty"`
+	Token     string `json:"token,omitempty"`
+	Event     string `json:"event"`
+	Message   string `json:"message,omitempty"`
+	TimeStamp int64  `json:"timestamp,omitempty"`
 }
 
 // Websocket TODO

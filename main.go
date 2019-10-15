@@ -32,7 +32,10 @@ func main() {
 	}
 	if enableCors {
 		log.Infof("Enable cors")
-		srv.Use(cors.Default())
+		corsCfg := cors.DefaultConfig()
+		corsCfg.AllowAllOrigins = true
+		corsCfg.AddAllowHeaders("token")
+		srv.Use(cors.New(corsCfg))
 	}
 	// handler
 	srv.POST("/login", handlers.Login)
