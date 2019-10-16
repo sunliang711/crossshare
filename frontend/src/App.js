@@ -22,7 +22,7 @@ const initialState = {
 class App extends React.Component {
     constructor(props) {
         super(props)
-        this.state = { ...initialState }
+        this.state = initialState
 
         this.loginCallback = this.loginCallback.bind(this)
         this.websocketHandler = this.websocketHandler.bind(this)
@@ -84,9 +84,9 @@ class App extends React.Component {
             let data = JSON.parse(message.data)
             if (data.event !== 'PONG') {
                 // if (data.event === 'text' || data.event === 'file') {
-                let texts = this.state.texts
+                let texts = this.state.texts.slice()
                 texts.push(message.data)
-                let status = this.state.status
+                let status = this.state.status.slice()
                 status.push('')
 
                 this.setState({ ...this.state, texts, status })
@@ -120,7 +120,7 @@ class App extends React.Component {
         clearInterval(this.timer)
         this.wsclient.close()
         this.wsclient = null
-        this.setState({ ...initialState, texts: [], status: [] })
+        this.setState(initialState)
     }
     render() {
         let loginOrGreeting = <Login callback={this.loginCallback} />

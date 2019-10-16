@@ -7,7 +7,8 @@ class Login extends React.Component {
         super(props)
         this.state = {
             user: "",
-            password: ""
+            password: "",
+            status: '',
         }
         this.handleChange = this.handleChange.bind(this)
     }
@@ -20,6 +21,7 @@ class Login extends React.Component {
                 <input name="user" placeholder="user" onChange={this.handleChange} />
                 <input name="password" placeholder="password" type="password" onChange={this.handleChange} />
                 <button onClick={() => { this.submit(this.props.callback) }}>submit</button>
+                <span>{this.state.status}</span>
             </div>
         )
     }
@@ -36,6 +38,9 @@ class Login extends React.Component {
                 console.log(`/login,response: ${JSON.stringify(res.data)}`)
                 if (res.data.code === 0) {
                     callback(this.state.user, res.data.token)
+                } else {
+                    console.log("login failed")
+                    this.setState({ ...this.state, status: res.data.msg })
                 }
             }
         )
