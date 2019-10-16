@@ -4,62 +4,33 @@ import ReactDOM from "react-dom";
 import { w3cwebsocket as W3CWebSocket } from 'websocket';
 import axios from 'axios';
 import TextItem from './TextItem'
-// import { CopyToClipboard } from 'react-copy-to-clipboard';
 import Login from './Login'
 import Sender from './sender'
+import config from "./config"
+import Logout from './logout'
 
-
-// const TextItem = props => {
-//     return (
-//         <li>
-//             <CopyToClipboard onCopy={props.onCopy} text={props.text}>
-//                 <button>{props.copyButtonText || "copy"}</button>
-//             </CopyToClipboard>
-//             <button onClick={props.onDelete}>
-//                 {props.deleteButtonText || "delete"}
-//             </button>
-//             {props.text}
-//             <span>{props.status}</span>
-//         </li>
-//     )
-// }
-
-const client = new W3CWebSocket("ws://localhost:8989/ws")
+// const client = new W3CWebSocket(config.wserver)
 
 class App extends React.Component {
     constructor(props) {
         super(props)
         this.state = {
+            token: "",
+            isLogin: false,
             interval: null,
-            count: 0,
-            texts: ["{\"event\":\"text\",\"message\":\"haha\"}"],
-            status: [""],
+            texts: [],
+            status: [],
+            wsclient: null,
+            user: "",
         }
+
+        this.loginCallback = this.loginCallback.bind(this)
+        this.websocketHandler = this.websocketHandler.bind(this)
+        this.logout = this.logout.bind(this)
+        this.send = this.send.bind(this)
     }
     componentWillMount() {
-        client.onopen = () => {
-            console.log("websocket client connected");
-            client.send('{"token":"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE1NzE4ODQ0OTcsInVzZXIiOiJlYWdsZSJ9.g6mE-SO5zloxJdiJkMy5kD4o2aWVyLVO6M9FS_Uh4JM","event":"text"}')
-            this.state.interval = setInterval(function () { client.send('{"event":"PING"}'); }, 3000)
-
-        };
-        client.onmessage = (message) => {
-            console.log(message)
-            let data = JSON.parse(message.data)
-            if (data.event !== 'PONG') {
-                // if (data.event === 'text' || data.event === 'file') {
-                let texts = this.state.texts
-                texts.push(message.data)
-                let status = this.state.status
-                status.push('')
-
-                this.setState({ ...this.state, texts, status })
-
-            }
-        };
-        client.onclose = () => {
-            clearInterval(this.state.interval)
-        }
+        // this.websocketHandler()
     }
     onCopy(i) {
         let status = this.state.status
@@ -73,16 +44,6 @@ class App extends React.Component {
         console.log(`texts: ${JSON.stringify(this.state.texts)}`)
         console.log(`status: ${JSON.stringify(status)}`)
         this.setState({ ...this.State, status })
-
-        const headers = {
-            "Content-Type": "application/json",
-            "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE1NzE4ODQ0OTcsInVzZXIiOiJlYWdsZSJ9.g6mE-SO5zloxJdiJkMy5kD4o2aWVyLVO6M9FS_Uh4JM"
-        }
-        const url = "http://localhost:8989/push"
-        const data = { event: "text", "message": "from axios post" }
-        axios.post(url, data, { headers: headers }).then(res => {
-            console.log(`res: ${JSON.stringify(res)}`)
-        })
     }
     delete(i) {
         console.log(`delete i: ${i}`)
@@ -94,16 +55,71 @@ class App extends React.Component {
         console.log(`status: ${JSON.stringify(status)}`)
         this.setState({ ...this.state, texts, status })
     }
-    login() {
-        console.log('login')
+    loginCallback(user, token) {
+        this.setState({ token: token, isLogin: true, user: user })
+        console.log(`this.state: ${JSON.stringify(this.state)}`)
+        this.websocketHandler()
     }
-    send() {
-        console.log('send')
+    websocketHandler() {
+        this.state.wsclient = new W3CWebSocket(config.wserver)
+        this.state.wsclient.onopen = () => {
+            console.log("websocket client connected");
+            this.state.wsclient.send(JSON.stringify({ token: this.state.token, event: "text" }))
+            this.state.interval = setInterval(() => { this.state.wsclient.send('{"event":"PING"}'); }, config.pingInterval)
+        };
+        this.state.wsclient.onmessage = (message) => {
+            console.log(message)
+            let data = JSON.parse(message.data)
+            if (data.event !== 'PONG') {
+                // if (data.event === 'text' || data.event === 'file') {
+                let texts = this.state.texts
+                texts.push(message.data)
+                let status = this.state.status
+                status.push('')
+
+                this.setState({ ...this.state, texts, status })
+
+            }
+        };
+        this.state.wsclient.onclose = () => {
+            clearInterval(this.state.interval)
+        }
+
+    }
+    send(text) {
+        console.log(`send ${text}`)
+        const headers = {
+            "Content-Type": "application/json",
+            "token": this.state.token
+        }
+        const url = config.restServer + "/push"
+        const data = { event: "text", "message": text }
+        axios.post(url, data, { headers: headers }).then(res => {
+            console.log(`res: ${JSON.stringify(res)}`)
+        })
+    }
+    logout() {
+        console.log('logout')
+        clearInterval(this.state.interval)
+        const state = this.state
+        state.token = ""
+        state.isLogin = false
+        state.interval = null
+        state.texts = []
+        state.status = []
+        state.wsclient.close()
+        state.wsclient = null
+        state.user = ""
+        this.setState(state)
     }
     render() {
+        let loginOrGreeting = <Login callback={this.loginCallback} />
+        if (this.state.isLogin) {
+            loginOrGreeting = <Logout user={this.state.user} onClick={() => { this.logout() }} />
+        }
         return (
             <div>
-                <Login onClick={this.login} />
+                {loginOrGreeting}
                 <ul>
                     {
                         this.state.texts.map((text, i) => {
@@ -121,7 +137,7 @@ class App extends React.Component {
                         })
                     }
                 </ul>
-                <Sender onClick={this.send}></Sender>
+                <Sender disable={!this.state.isLogin} onClick={this.send}></Sender>
             </div>
         )
     }
