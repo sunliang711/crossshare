@@ -8,26 +8,28 @@ import Login from './Login'
 import Sender from './sender'
 import config from "./config"
 import Logout from './logout'
+import { push } from './api'
 
 // const client = new W3CWebSocket(config.wserver)
+const initialState = {
+    token: "",
+    isLogin: false,
+    texts: [],
+    status: [],
+    user: "",
+}
 
 class App extends React.Component {
     constructor(props) {
         super(props)
-        this.state = {
-            token: "",
-            isLogin: false,
-            interval: null,
-            texts: [],
-            status: [],
-            wsclient: null,
-            user: "",
-        }
+        this.state = { ...initialState }
 
         this.loginCallback = this.loginCallback.bind(this)
         this.websocketHandler = this.websocketHandler.bind(this)
         this.logout = this.logout.bind(this)
         this.send = this.send.bind(this)
+        this.timer = null
+        this.wsclient = null
     }
     componentWillMount() {
         // this.websocketHandler()
@@ -60,14 +62,24 @@ class App extends React.Component {
         console.log(`this.state: ${JSON.stringify(this.state)}`)
         this.websocketHandler()
     }
+    // componentDidUpdate() {
+    //     if (this.state.isLogin) {
+    //         console.log('update')
+    //         this.timer = setInterval(() => {
+    //             console.log(`isLogin:${this.state.isLogin}`)
+    //             console.log('interval()')
+    //             this.wsclient.send(JSON.stringify({ event: "PING" }))
+    //         }, config.pingInterval);
+    //     }
+    // }
     websocketHandler() {
-        this.state.wsclient = new W3CWebSocket(config.wserver)
-        this.state.wsclient.onopen = () => {
+        this.wsclient = new W3CWebSocket(config.wserver)
+        this.wsclient.onopen = () => {
             console.log("websocket client connected");
-            this.state.wsclient.send(JSON.stringify({ token: this.state.token, event: "text" }))
-            this.state.interval = setInterval(() => { this.state.wsclient.send('{"event":"PING"}'); }, config.pingInterval)
+            this.wsclient.send(JSON.stringify({ token: this.state.token, event: "text" }))
+            this.timer = setInterval(() => { this.wsclient.send('{"event":"PING"}'); }, config.pingInterval)
         };
-        this.state.wsclient.onmessage = (message) => {
+        this.wsclient.onmessage = (message) => {
             console.log(message)
             let data = JSON.parse(message.data)
             if (data.event !== 'PONG') {
@@ -81,8 +93,8 @@ class App extends React.Component {
 
             }
         };
-        this.state.wsclient.onclose = () => {
-            clearInterval(this.state.interval)
+        this.wsclient.onclose = () => {
+            clearInterval(this.timer)
         }
 
     }
@@ -94,32 +106,32 @@ class App extends React.Component {
         }
         const url = config.restServer + "/push"
         const data = { event: "text", "message": text }
-        axios.post(url, data, { headers: headers }).then(res => {
+        // axios.post(url, data, { headers: headers }).then(res => {
+        //     console.log(`res: ${JSON.stringify(res)}`)
+        // })
+        push({ headers: headers }, data).then(res => {
             console.log(`res: ${JSON.stringify(res)}`)
         })
+
     }
     logout() {
         console.log('logout')
-        clearInterval(this.state.interval)
-        const state = this.state
-        state.token = ""
-        state.isLogin = false
-        state.interval = null
-        state.texts = []
-        state.status = []
-        state.wsclient.close()
-        state.wsclient = null
-        state.user = ""
-        this.setState(state)
+        // clearInterval(this.state.interval)
+        clearInterval(this.timer)
+        this.wsclient.close()
+        this.wsclient = null
+        this.setState({ ...initialState, texts: [], status: [] })
     }
     render() {
         let loginOrGreeting = <Login callback={this.loginCallback} />
         if (this.state.isLogin) {
             loginOrGreeting = <Logout user={this.state.user} onClick={() => { this.logout() }} />
         }
+        console.log(`texts: ${JSON.stringify(this.state.texts)}`)
         return (
             <div>
                 {loginOrGreeting}
+                <Sender disable={!this.state.isLogin} onClick={this.send}></Sender>
                 <ul>
                     {
                         this.state.texts.map((text, i) => {
@@ -137,7 +149,6 @@ class App extends React.Component {
                         })
                     }
                 </ul>
-                <Sender disable={!this.state.isLogin} onClick={this.send}></Sender>
             </div>
         )
     }
