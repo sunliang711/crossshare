@@ -28,7 +28,7 @@ class App extends React.Component {
         this.wsclient = null
     }
     onCopy = (i) => {
-        let status = this.state.status
+        const { status } = this.state
         for (let j = 0; j < status.length; j++) {
             if (j === i) {
                 status[j] = ' Copied'
@@ -38,7 +38,7 @@ class App extends React.Component {
         }
         console.log(`texts: ${JSON.stringify(this.state.texts)}`)
         console.log(`status: ${JSON.stringify(status)}`)
-        this.setState({ ...this.State, status })
+        this.setState({ status })
     }
     delete = (i) => {
         console.log(`delete i: ${i}`)
@@ -51,7 +51,7 @@ class App extends React.Component {
         this.setState({ texts, status })
     }
     loginCallback = (user, token) => {
-        this.setState({ token: token, isLogin: true, user: user })
+        this.setState({ token, isLogin: true, user })
         console.log(`this.state: ${JSON.stringify(this.state)}`)
         this.websocketHandler()
     }
@@ -73,7 +73,7 @@ class App extends React.Component {
                 let status = this.state.status.slice()
                 status.push('')
 
-                this.setState({ ...this.state, texts, status })
+                this.setState({ texts, status })
 
             }
         };
@@ -102,14 +102,15 @@ class App extends React.Component {
         this.setState(initialState)
     }
     render() {
+        const { isLogin, user, status } = this.state
         let loginOrGreeting = <Login callback={this.loginCallback} />
-        if (this.state.isLogin) {
-            loginOrGreeting = <Logout user={this.state.user} onClick={this.logout} />
+        if (isLogin) {
+            loginOrGreeting = <Logout user={user} onClick={this.logout} />
         }
         return (
             <div>
                 {loginOrGreeting}
-                <Sender disable={!this.state.isLogin} onClick={this.send}></Sender>
+                <Sender disable={!isLogin} onClick={this.send}></Sender>
                 <ul>
                     {
                         this.state.texts.map((text, i) => {
@@ -120,7 +121,7 @@ class App extends React.Component {
                                     onCopy={this.onCopy.bind(this, i)}
                                     text={t.message}
                                     onDelete={() => { this.delete(i) }}
-                                    status={this.state.status[i]}
+                                    status={status[i]}
                                 ></TextItem>
                             )
                         })
