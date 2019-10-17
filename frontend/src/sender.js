@@ -14,7 +14,7 @@ class Sender extends React.Component {
         this.textarea = e.target
     }
     clear = () => {
-        // this.setState({ textToBeSent: null })
+        this.setState({ textToBeSent: null })
         this.textarea.value = ''
     }
     render() {

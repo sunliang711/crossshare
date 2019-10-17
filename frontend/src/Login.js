@@ -41,7 +41,7 @@ class Login extends React.Component {
                     callback(this.state.user, res.data.token)
                 } else {
                     console.log("login failed")
-                    this.setState({ ...this.state, status: res.data.msg })
+                    this.setState({ status: res.data.msg })
                 }
             }
         )
