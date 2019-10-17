@@ -4,25 +4,25 @@ class Sender extends React.Component {
     constructor(props) {
         super(props)
         this.state = {
-            textToBeSent: null
+            textToBeSent: ''
         }
-        this.textarea = null
+        // this.textarea = null
         this.handleChange = this.handleChange.bind(this)
     }
     handleChange(e) {
         this.setState({ [e.target.name]: e.target.value })
-        this.textarea = e.target
+        // this.textarea = e.target
     }
     clear = () => {
-        this.setState({ textToBeSent: null })
-        this.textarea.value = ''
+        this.setState({ textToBeSent: '' })
+        // this.textarea.value = ''
     }
     render() {
         return (
             <div>
-                <textarea name="textToBeSent" onChange={this.handleChange}></textarea>
+                <textarea name="textToBeSent" value={this.state.textToBeSent} onChange={this.handleChange}></textarea>
                 <button disabled={this.props.disable} onClick={() => { this.props.onClick(this.state.textToBeSent) }}>send</button>
-                <button disabled={this.state.textToBeSent === null} onClick={this.clear}>clear</button>
+                <button disabled={this.state.textToBeSent === ''} onClick={this.clear}>clear</button>
             </div>
         )
 

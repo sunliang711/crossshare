@@ -4,18 +4,28 @@ import { CopyToClipboard } from 'react-copy-to-clipboard';
 import "./TextItem.css"
 
 export default props => {
+    const copyElem = <CopyToClipboard
+        onCopy={props.onCopy}
+        text={props.text}>
+        <button className="copyBtn">
+            {props.copyButtonText || "copy"}
+        </button>
+    </CopyToClipboard>
+
+    const deleteBtn =
+        <button className="deleteBtn" onClick={props.onDelete}>
+            {props.deleteButtonText || "delete"}
+        </button>
+
+    const status = <span className="status">
+        {props.status}
+    </span>
     return (
         <li className="textItem">
-            <CopyToClipboard onCopy={props.onCopy} text={props.text}>
-                <button className="copyBtn">{props.copyButtonText || "copy"}</button>
-            </CopyToClipboard>
-            <button className="deleteBtn" onClick={props.onDelete}>
-                {props.deleteButtonText || "delete"}
-            </button>
+            {copyElem}
+            {deleteBtn}
             {props.text}
-            <span className="status">
-                {props.status}
-            </span>
+            {status}
         </li>
     )
 }

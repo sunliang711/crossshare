@@ -21,12 +21,12 @@ class Login extends React.Component {
             <div>
                 <input name="user" placeholder="user" onChange={this.handleChange} />
                 <input name="password" placeholder="password" type="password" onChange={this.handleChange} />
-                <button onClick={() => { this.submit(this.props.callback) }}>submit</button>
+                <button onClick={this.submit.bind(this, this.props.callback)}>submit</button>
                 <span className="loginStatus">{this.state.status}</span>
             </div>
         )
     }
-    submit(callback) {
+    submit = (callback) => {
         const headers = {
             "Content-Type": "application/json"
         }
