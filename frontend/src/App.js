@@ -84,8 +84,9 @@ class App extends React.Component {
             let data = JSON.parse(message.data)
             if (data.event !== 'PONG') {
                 // if (data.event === 'text' || data.event === 'file') {
-                let texts = this.state.texts.slice()
-                texts.push(message.data)
+                let texts = this.state.texts
+                // texts.push(message.data)
+                texts = texts.concat([message.data])
                 let status = this.state.status.slice()
                 status.push('')
 
@@ -155,4 +156,5 @@ class App extends React.Component {
 }
 
 
-ReactDOM.render(<App />, document.getElementById("app"));
+// ReactDOM.render(<App />, document.getElementById("app"));
+export default App;

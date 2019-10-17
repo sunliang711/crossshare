@@ -1,6 +1,7 @@
 import React from 'react';
 import config from "./config"
 import axios from 'axios';
+import "./Login.css"
 
 class Login extends React.Component {
     constructor(props) {
@@ -14,6 +15,9 @@ class Login extends React.Component {
     }
     handleChange(e) {
         this.setState({ [e.target.name]: e.target.value })
+        // this.setState(state => ({
+        //     [e.target.name]: e.target.value,
+        // }))
     }
     render() {
         return (
@@ -21,7 +25,7 @@ class Login extends React.Component {
                 <input name="user" placeholder="user" onChange={this.handleChange} />
                 <input name="password" placeholder="password" type="password" onChange={this.handleChange} />
                 <button onClick={() => { this.submit(this.props.callback) }}>submit</button>
-                <span>{this.state.status}</span>
+                <span className="loginStatus">{this.state.status}</span>
             </div>
         )
     }
