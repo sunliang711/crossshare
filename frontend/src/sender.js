@@ -6,15 +6,16 @@ class Sender extends React.Component {
         this.state = {
             textToBeSent: null
         }
+        this.textarea = null
         this.handleChange = this.handleChange.bind(this)
-        this.clear = this.clear.bind(this)
     }
     handleChange(e) {
         this.setState({ [e.target.name]: e.target.value })
+        this.textarea = e.target
     }
-    clear() {
-        console.log('clear')
-        this.setState({ textToBeSent: null })
+    clear = () => {
+        // this.setState({ textToBeSent: null })
+        this.textarea.value = ''
     }
     render() {
         return (

@@ -13,7 +13,7 @@ class Login extends React.Component {
         }
         // this.handleChange = this.handleChange.bind(this)
     }
-    handleChange = (e) => {
+    handleChange(e) {
         this.setState({ [e.target.name]: e.target.value })
     }
     render() {
