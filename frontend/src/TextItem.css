@@ -1,16 +1,17 @@
 .textItem{
+    display: flex;
+    align-content: center;
     background-color: darkcyan;
     list-style-type: none;
 }
 
-.deleteBtn{
-    color: green;
-}
-
-.copyBtn{
-    color: red;
+.text{
+    margin-left:50px;
+    margin-right: 20px;
+    height:40px;
+    top:40px;
 }
 
 .status{
-    color: yellowgreen
+    color:red;
 }

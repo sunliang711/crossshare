@@ -1,4 +1,6 @@
 import React from 'react';
+import Button from '@material-ui/core/Button'
+import "./logout.css"
 
 class Logout extends React.Component {
     constructor(props) {
@@ -7,8 +9,9 @@ class Logout extends React.Component {
 
     render() {
         return (
-            <div>
-                Greeting {this.props.user}<button onClick={this.props.onClick}>logout</button>
+            <div className="logout">
+                <span className="greeting"> Greeting {this.props.user}</span>
+                <Button className="logoutBtn" variant="contained" color="primary" onClick={this.props.onClick}>logout</Button>
             </div>
         )
     }

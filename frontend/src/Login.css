@@ -1,3 +1,14 @@
+.loginForm{
+    display: flex;
+    justify-content: center;
+}
 .loginStatus{
     color: red;
+}
+
+.MuiButtonBase-root{
+    top:20px;
+    left:20px;
+    height:50px;
+    width:100px;
 }

@@ -1,29 +1,50 @@
 import React from 'react';
+import "./sender.css";
+import TextField from '@material-ui/core/TextField';
+import Button from '@material-ui/core/Button';
+import { styled } from '@material-ui/core/styles';
+
+const MyButton = styled(Button)({
+    top: 30,
+    marginRight: '10px',
+    marginLeft: '0px',
+    width: '40px',
+    height: '70px',
+})
 
 class Sender extends React.Component {
     constructor(props) {
         super(props)
         this.state = {
-            textToBeSent: ''
+            text: ''
         }
         // this.textarea = null
-        this.handleChange = this.handleChange.bind(this)
+        // this.handleChange = this.handleChange.bind(this)
     }
-    handleChange(e) {
-        this.setState({ [e.target.name]: e.target.value })
+    handleChange = name => e => {
+        this.setState({ [name]: e.target.value })
         // this.textarea = e.target
     }
     clear = () => {
-        this.setState({ textToBeSent: '' })
+        this.setState({ text: '' })
         // this.textarea.value = ''
     }
     render() {
         return (
-            <div>
-                <textarea name="textToBeSent" value={this.state.textToBeSent} onChange={this.handleChange}></textarea>
-                <button disabled={this.props.disable} onClick={() => { this.props.onClick(this.state.textToBeSent) }}>send</button>
-                <button disabled={this.state.textToBeSent === ''} onClick={this.clear}>clear</button>
-            </div>
+            <div className="sender">
+                <TextField
+                    className="sendBox"
+                    label="text"
+                    margin="normal"
+                    variant="outlined"
+                    multiline
+                    rows="4"
+                    value={this.state.text}
+                    onChange={this.handleChange('text')}
+                />
+                <MyButton className="sendBtn" variant="contained" color="primary" disabled={this.props.disable || this.state.text === ''} onClick={() => { this.props.onClick(this.state.text) }}>send</MyButton>
+                <MyButton className="clearBtn" variant="contained" color="primary" disabled={this.state.text === ''} onClick={this.clear}>clear</MyButton>
+            </div >
         )
 
     }

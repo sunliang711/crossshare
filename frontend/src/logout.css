@@ -1,0 +1,11 @@
+.logout{
+    height: 80px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.logoutBtn{
+    top:0px;
+    height:45px;
+}

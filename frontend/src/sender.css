@@ -1,0 +1,20 @@
+.sender{
+    display: flex;
+    justify-content: center;
+    margin-bottom:40px;
+}
+
+.sendBox{
+    width:400px;
+    /* height:200px; */
+}
+
+/* .sendBtn{
+    top:40px;
+    height:60px;
+}
+
+.clearBtn{
+    top:40px;
+    height:60px;
+} */

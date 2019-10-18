@@ -1,22 +1,38 @@
 import React from "react";
 import ReactDOM from "react-dom";
 import { CopyToClipboard } from 'react-copy-to-clipboard';
+import Button from '@material-ui/core/Button'
+import { makeStyles } from '@material-ui/core/styles';
 import "./TextItem.css"
 
+const useStyles = makeStyles(theme => ({
+    button: {
+        margin: theme.spacing(1),
+        top: 0
+    }
+}))
 export default props => {
+    const classes = useStyles();
     const copyElem = <CopyToClipboard
         onCopy={props.onCopy}
         text={props.text}>
-        <button className="copyBtn">
+        <Button
+            variant="contained"
+            color="primary"
+            className={classes.button}>
             {props.copyButtonText || "copy"}
-        </button>
+        </Button>
     </CopyToClipboard>
 
     const deleteBtn =
-        <button className="deleteBtn" onClick={props.onDelete}>
+        <Button
+            variant="contained"
+            color="primary"
+            className={classes.button} onClick={props.onDelete}>
             {props.deleteButtonText || "delete"}
-        </button>
+        </Button>
 
+    const text = <span className="text">{props.text}</span>
     const status = <span className="status">
         {props.status}
     </span>
@@ -24,7 +40,7 @@ export default props => {
         <li className="textItem">
             {copyElem}
             {deleteBtn}
-            {props.text}
+            {text}
             {status}
         </li>
     )
