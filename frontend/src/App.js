@@ -1,5 +1,4 @@
 import React from "react";
-import ReactDOM from "react-dom";
 
 import { w3cwebsocket as W3CWebSocket } from 'websocket';
 import axios from 'axios';
@@ -9,6 +8,7 @@ import Sender from './sender'
 import config from "./config"
 import Logout from './logout'
 import { push } from './api'
+import Button from "@material-ui/core/Button"
 
 // const client = new W3CWebSocket(config.wserver)
 const initialState = {
@@ -77,8 +77,14 @@ class App extends React.Component {
 
             }
         };
+        this.wsclient.onerror = () => {
+            console.log('websocket on error')
+            this.setState({ isLogin: false })
+        }
         this.wsclient.onclose = () => {
+            console.log('websocket closed')
             clearInterval(this.timerID)
+            this.setState({ isLogin: false })
         }
 
     }
@@ -90,7 +96,7 @@ class App extends React.Component {
         }
         const data = { event: "text", "message": text }
         push({ headers }, data).then(res => {
-            console.log(`res: ${JSON.stringify(res)}`)
+            console.log(`res: ${JSON.stringify(res.data)}`)
         })
 
     }
@@ -100,6 +106,10 @@ class App extends React.Component {
         this.wsclient.close()
         this.wsclient = null
         this.setState(initialState)
+    }
+
+    clearAll = () => {
+        this.setState({ texts: [], status: [] })
     }
     render() {
         const { isLogin, user, status } = this.state
@@ -111,6 +121,7 @@ class App extends React.Component {
             <div>
                 {loginOrGreeting}
                 <Sender disable={!isLogin} onClick={this.send}></Sender>
+                {this.state.texts.length > 0 ? <Button className="clearAll" variant="contained" color="primary" onClick={this.clearAll}>clearAll</Button> : null}
                 <ul>
                     {
                         this.state.texts.map((text, i) => {

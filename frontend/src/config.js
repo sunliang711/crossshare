@@ -1,6 +1,6 @@
 export default {
-    wserver: "ws://localhost:8989/ws",
-    restServer: "http://localhost:8989",
-    pingInterval: 3000
+    wserver: "ws://aliyun.eagle711.win:6098/ws",
+    restServer: "http://aliyun.eagle711.win:6098",
+    pingInterval: 5000
 
 }

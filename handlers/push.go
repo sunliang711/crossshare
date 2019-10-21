@@ -36,6 +36,7 @@ func Push(c *gin.Context) {
 		})
 		return
 	}
+	log.Debugf("token: %v", t.Raw)
 	userEventConns.Push(user, pm.Event, pm.Message)
 	c.JSON(200, gin.H{
 		"code": 0,

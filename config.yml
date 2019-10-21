@@ -9,6 +9,6 @@ expire: 14400
 log_level: debug
 
 # unit: second
-check_interval: 5
+check_interval: 10
 # unit: second
-expire_limit: 60
+expire_limit: 30

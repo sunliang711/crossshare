@@ -3,6 +3,7 @@ import config from "./config"
 import axios from 'axios';
 import TextField from '@material-ui/core/TextField'
 import Button from '@material-ui/core/Button'
+import Checkbox from '@material-ui/core/Checkbox'
 import "./Login.css"
 
 // const Login2 = props => {
@@ -72,14 +73,29 @@ class Login extends React.Component {
             user: "",
             password: "",
             status: '',
+            rememberMe: '',
         }
         // this.handleChange = this.handleChange.bind(this)
     }
+    componentDidMount() {
+        const rememberMe = localStorage.getItem("rememberMe") === "true"
+        this.setState({ rememberMe })
+        console.log("rememberMe: ", rememberMe)
+        if (rememberMe) {
+            const user = localStorage.getItem("user")
+            console.log("user: ", user)
+            this.setState({ user })
+        }
+    }
     handleChange = name => (e) => {
-        console.log('handleChange called')
+        // console.log('handleChange called')
         // this.setState({ [e.target.name]: e.target.value })
-        this.setState({ [name]: e.target.value })
-        console.log(`this.state: ${JSON.stringify(this.state)}`)
+        if (e.target.type === 'checkbox') {
+            this.setState({ [name]: e.target.checked })
+        } else {
+            this.setState({ [name]: e.target.value })
+        }
+        // console.log(`this.state: ${JSON.stringify(this.state)}`)
     }
     render() {
         return (
@@ -97,6 +113,7 @@ class Login extends React.Component {
                         onChange={this.handleChange('user')}
                         margin="normal"
                         variant="outlined"
+                        value={this.state.user}
                     />
                     <TextField
                         id="password"
@@ -105,6 +122,12 @@ class Login extends React.Component {
                         onChange={this.handleChange('password')}
                         margin="normal"
                         variant="outlined"
+                    />
+                    <Checkbox
+                        checked={this.state.rememberMe}
+                        onChange={this.handleChange('rememberMe')}
+                        color="primary"
+                        value={this.state.rememberMe}
                     />
                     <Button variant="contained" color="primary" onClick={this.submit.bind(this, this.props.callback)}>submit</Button>
 
@@ -126,6 +149,13 @@ class Login extends React.Component {
                 console.log(`/login,response: ${JSON.stringify(res.data)}`)
                 if (res.data.code === 0) {
                     callback(this.state.user, res.data.token)
+                    const { rememberMe } = this.state
+                    localStorage.setItem("rememberMe", rememberMe === true)
+                    if (rememberMe) {
+                        localStorage.setItem("user", this.state.user)
+                    } else {
+                        localStorage.removeItem("user")
+                    }
                 } else {
                     console.log("login failed")
                     this.setState({ status: res.data.msg })

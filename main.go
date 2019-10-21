@@ -35,6 +35,7 @@ func main() {
 		corsCfg := cors.DefaultConfig()
 		corsCfg.AllowAllOrigins = true
 		corsCfg.AddAllowHeaders("token")
+		// corsCfg.AddAllowHeaders("Access-Control-Allow-Origin")
 		srv.Use(cors.New(corsCfg))
 	}
 	// handler
