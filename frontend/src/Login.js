@@ -130,6 +130,7 @@ class Login extends React.Component {
                         value={this.state.rememberMe}
                     />
                     <Button variant="contained" color="primary" onClick={this.submit.bind(this, this.props.callback)}>submit</Button>
+                    <span className="loginStatus">{this.state.status}</span>
 
                 </form>
             </div>

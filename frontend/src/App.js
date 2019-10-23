@@ -11,13 +11,14 @@ import { push } from './api'
 import Button from "@material-ui/core/Button"
 import { styled } from "@material-ui/core/styles"
 import dateFormat from 'dateformat';
+import CardItem from './CardItem';
 
 // const client = new W3CWebSocket(config.wserver)
 const initialState = {
     token: "",
     isLogin: false,
-    texts: [],
-    status: [],
+    messages: [{ event: 'text', message: 'haha', timestamp: 12345678 }],
+    // status: [],
     user: "",
 }
 
@@ -44,28 +45,22 @@ class App extends React.Component {
         }, config.idleTimeout * 60 * 60 * 1000);
     }
     onCopy = (i) => {
-        const { status } = this.state
-        for (let j = 0; j < status.length; j++) {
+        const { messages } = this.state
+        for (let j = 0; j < messages.length; j++) {
             if (j === i) {
-                status[j] = ' Copied'
+                messages[j].status = ' Copied'
             } else {
-                status[j] = ' '
+                messages[j].status = ' '
             }
         }
-        console.log(`texts: ${JSON.stringify(this.state.texts)}`)
-        console.log(`status: ${JSON.stringify(status)}`)
-        this.setState({ status })
+        this.setState({ messages })
         this.resetTimer()
     }
     delete = (i) => {
         console.log(`delete i: ${i}`)
-        let texts = this.state.texts.slice()
-        texts.splice(i, 1)
-        let status = this.state.status.slice()
-        status.splice(i, 1)
-        console.log(`texts: ${JSON.stringify(texts)}`)
-        console.log(`status: ${JSON.stringify(status)}`)
-        this.setState({ texts, status })
+        let messages = this.state.messages.slice()
+        messages.splice(i, 1)
+        this.setState({ messages })
         this.resetTimer()
     }
     loginCallback = (user, token) => {
@@ -85,14 +80,20 @@ class App extends React.Component {
             console.log(message)
             let data = JSON.parse(message.data)
             if (data.event !== 'PONG') {
-                // if (data.event === 'text' || data.event === 'file') {
-                let texts = this.state.texts
-                // texts.push(message.data)
-                texts = texts.concat([message.data])
-                let status = this.state.status.slice()
-                status.push('')
+                // let texts = this.state.texts
+                // // texts.push(message.data)
+                // texts = texts.concat([message.data])
+                // let status = this.state.status.slice()
+                // status.push('')
 
-                this.setState({ texts, status })
+                // this.setState({ texts, status })
+
+                const messages = this.state.messages.slice();
+                console.log('current messages: ', JSON.stringify(messages))
+                messages.push({ ...data, status: '' })
+                console.log('after,messages: ', JSON.stringify(messages))
+                this.setState({ messages })
+                console.log('after,this.state.messages: ', JSON.stringify(this.state.messages))
 
             }
         };
@@ -115,7 +116,7 @@ class App extends React.Component {
         }
         const data = { event: "text", "message": text }
         push({ headers }, data).then(res => {
-            console.log(`res: ${JSON.stringify(res.data)}`)
+            console.log(`Push res: ${JSON.stringify(res.data)}`)
         })
         this.resetTimer()
 
@@ -131,7 +132,7 @@ class App extends React.Component {
     }
 
     clearAll = () => {
-        this.setState({ texts: [], status: [] })
+        this.setState({ messages: [] })
         this.resetTimer()
     }
     render() {
@@ -144,8 +145,12 @@ class App extends React.Component {
             <div>
                 {loginOrGreeting}
                 <Sender disable={!isLogin} onClick={this.send}></Sender>
-                {this.state.texts.length > 0 ? <MyButton className="clearAll" variant="contained" color="primary" onClick={this.clearAll}>clearAll</MyButton> : null}
-                <ul>
+                {this.state.messages.length > 0 ? <MyButton className="clearAll" variant="contained" color="primary" onClick={this.clearAll}>clearAll</MyButton> : null}
+                <CardItem
+                    copyCallback={this.onCopy}
+                    onDelete={this.delete}
+                    messages={this.state.messages} />
+                {/* <ul>
                     {
                         this.state.texts.map((text, i) => {
                             let t = JSON.parse(text)
@@ -161,7 +166,7 @@ class App extends React.Component {
                             )
                         })
                     }
-                </ul>
+                </ul> */}
             </div>
         )
     }
