@@ -24,10 +24,10 @@ const useStyles = makeStyles(theme => ({
         flexWrap: 'wrap',
     },
     card: {
-        width: '48%',
-        marginLight: '2%',
+        width: '98%',
+        marginLight: '1%',
         marginRight: '1%',
-        marginBottom: '1%',
+        marginBottom: '3%',
     },
     title: {
         // textAlign: 'center',
@@ -35,7 +35,7 @@ const useStyles = makeStyles(theme => ({
     message: {
         // color: 'blue',
         fontSize: '20px',
-        height: '60px',
+        // height: '60px',
     },
     copyBtn: {
         top: 0,
@@ -67,7 +67,7 @@ export default props => {
                                 {dateFormat(new Date(message.timestamp * 1000), "HH:MM:ss yyyy/mm/dd")}
                             </Typography>
                             <Typography className={classes.message} variant="h4" component="h2">
-                                {message.message.length > 40 ? message.message.substring(0, 30) + "..." : message.message}
+                                {message.message.length > 70 ? message.message.substring(0, 65) + "..." : message.message}
                             </Typography>
                             <Typography className={classes.status}>
                                 {message.status}

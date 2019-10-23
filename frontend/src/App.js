@@ -17,7 +17,7 @@ import CardItem from './CardItem';
 const initialState = {
     token: "",
     isLogin: false,
-    messages: [{ event: 'text', message: 'haha', timestamp: 12345678 }],
+    messages: [{ event: 'text', message: 'haha', timestamp: 1571835127 }],
     // status: [],
     user: "",
 }
@@ -138,7 +138,7 @@ class App extends React.Component {
         this.resetTimer()
     }
     render() {
-        const { isLogin, user, status } = this.state
+        const { isLogin, user } = this.state
         let loginOrGreeting = <Login callback={this.loginCallback} />
         if (isLogin) {
             loginOrGreeting = <Logout user={user} onClick={this.logout} />

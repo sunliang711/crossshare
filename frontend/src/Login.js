@@ -136,7 +136,7 @@ class Login extends React.Component {
                         }
                         label="remember user"
                     />
-                    <Button className="submitBtn" variant="contained" color="primary" onClick={this.submit.bind(this, this.props.callback)}>submit</Button>
+                    <Button className="submitBtn" disabled={this.state.user === '' || this.state.password === ''} variant="contained" color="primary" onClick={this.submit.bind(this, this.props.callback)}>submit</Button>
                     <span className="loginStatus">{this.state.status}</span>
 
                 </form>

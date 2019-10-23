@@ -10,7 +10,7 @@ class Logout extends React.Component {
     render() {
         return (
             <div className="logout">
-                <span className="greeting"> Greeting {this.props.user}</span>
+                <span > Hello, <span className="greeting">{this.props.user}</span></span>
                 <Button className="logoutBtn" variant="contained" color="primary" onClick={this.props.onClick}>logout</Button>
             </div>
         )
