@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"time"
 
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
@@ -17,7 +18,7 @@ import (
 // 2019/10/08 18:36:30
 func main() {
 	ginLogger := viper.GetBool("gin_logger")
-	enableCors := viper.GetBool("cors")
+	enableCors := viper.GetBool("cors.enable")
 	port := viper.GetInt("port")
 	logLevel := viper.GetString("log_level")
 
@@ -31,11 +32,23 @@ func main() {
 		srv.Use(gin.Logger())
 	}
 	if enableCors {
+		allowMethods := viper.GetStringSlice("cors.methods")
+		allowHeaders := viper.GetStringSlice("cors.headers")
+		allowOrigins := viper.GetStringSlice("cors.allowOrigins")
+		allowAllOrigins := viper.GetBool("cors.allowAllOrigins")
 		log.Infof("Enable cors")
-		corsCfg := cors.DefaultConfig()
-		corsCfg.AllowAllOrigins = true
-		corsCfg.AddAllowHeaders("token")
-		// corsCfg.AddAllowHeaders("Access-Control-Allow-Origin")
+		// cors.DefaultConfig()
+		corsCfg := cors.Config{
+			AllowHeaders: allowHeaders,
+			AllowMethods: allowMethods,
+			MaxAge:       12 * time.Hour,
+		}
+		if allowAllOrigins {
+			corsCfg.AllowAllOrigins = true
+		} else {
+			corsCfg.AllowOrigins = allowOrigins
+		}
+		fmt.Printf("cors cfg: %+v\n", corsCfg)
 		srv.Use(cors.New(corsCfg))
 	}
 	// handler

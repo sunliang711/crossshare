@@ -4,6 +4,7 @@ import axios from 'axios';
 import TextField from '@material-ui/core/TextField'
 import Button from '@material-ui/core/Button'
 import Checkbox from '@material-ui/core/Checkbox'
+import FormControlLabel from '@material-ui/core/FormControlLabel';
 import "./Login.css"
 
 // const Login2 = props => {
@@ -123,13 +124,19 @@ class Login extends React.Component {
                         margin="normal"
                         variant="outlined"
                     />
-                    <Checkbox
-                        checked={this.state.rememberMe}
-                        onChange={this.handleChange('rememberMe')}
-                        color="primary"
-                        value={this.state.rememberMe}
+                    <FormControlLabel className="rememberPar"
+                        control={
+                            <Checkbox
+                                className="rememberMe"
+                                checked={this.state.rememberMe}
+                                onChange={this.handleChange('rememberMe')}
+                                color="primary"
+                                value={this.state.rememberMe}
+                            />
+                        }
+                        label="remember user"
                     />
-                    <Button variant="contained" color="primary" onClick={this.submit.bind(this, this.props.callback)}>submit</Button>
+                    <Button className="submitBtn" variant="contained" color="primary" onClick={this.submit.bind(this, this.props.callback)}>submit</Button>
                     <span className="loginStatus">{this.state.status}</span>
 
                 </form>

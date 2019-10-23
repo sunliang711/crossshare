@@ -25,8 +25,10 @@ const initialState = {
 const MyButton = styled(Button)({
     marginLeft: 16,
     marginBottom: 10,
-    width: '100px',
-    height: '70px',
+    width: '80px',
+    height: '60px',
+    top: 0,
+    left: 0,
 })
 
 class App extends React.Component {

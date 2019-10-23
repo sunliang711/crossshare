@@ -1,9 +1,13 @@
 .loginForm{
     display: flex;
-    justify-content: center;
+    /* justify-content: center; */
+    flex-wrap: wrap;
 }
 .loginStatus{
     color: red;
+    position: relative;
+    top: 35px;
+    left:30px;
 }
 
 .MuiButtonBase-root{
@@ -11,4 +15,15 @@
     left:20px;
     height:50px;
     width:100px;
+}
+
+.rememberMe{
+    position: relative;
+    top:0px;
+    left:40px;
+}
+
+.submitBtn{
+    left:0px;
+    top:10px;
 }

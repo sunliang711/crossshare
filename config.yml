@@ -1,5 +1,4 @@
 port: 8989
-cors: true
 gin_logger: true
 dsn: root@tcp(localhost)/cross_share
 jwt_key: secretKey
@@ -12,3 +11,16 @@ log_level: debug
 check_interval: 10
 # unit: second
 expire_limit: 30
+
+cors:
+  enable: true
+  headers:
+    - Origin
+    - Content-Type
+    - token
+  methods:
+    - GET
+    - POST
+  allowAllOrigins: true
+  allowOrigins:
+    - http://localhost:3000
