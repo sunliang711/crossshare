@@ -33,7 +33,7 @@ const useStyles = makeStyles(theme => ({
         // textAlign: 'center',
     },
     message: {
-        color: 'blue',
+        // color: 'blue',
         fontSize: '20px',
         height: '60px',
     },
@@ -67,7 +67,7 @@ export default props => {
                                 {dateFormat(new Date(message.timestamp * 1000), "HH:MM:ss yyyy/mm/dd")}
                             </Typography>
                             <Typography className={classes.message} variant="h4" component="h2">
-                                {message.message.length > 24 ? message.message.substring(0, 21) + "..." : message.message}
+                                {message.message.length > 40 ? message.message.substring(0, 30) + "..." : message.message}
                             </Typography>
                             <Typography className={classes.status}>
                                 {message.status}
