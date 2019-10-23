@@ -9,6 +9,8 @@ import config from "./config"
 import Logout from './logout'
 import { push } from './api'
 import Button from "@material-ui/core/Button"
+import { styled } from "@material-ui/core/styles"
+import dateFormat from 'dateformat';
 
 // const client = new W3CWebSocket(config.wserver)
 const initialState = {
@@ -19,13 +21,27 @@ const initialState = {
     user: "",
 }
 
+const MyButton = styled(Button)({
+    marginLeft: 16,
+    marginBottom: 10,
+    width: '100px',
+    height: '70px',
+})
+
 class App extends React.Component {
     constructor(props) {
         super(props)
         this.state = initialState
 
-        this.timerID = null
+        this.intervalID = null
         this.wsclient = null
+        this.timerID = null
+    }
+    resetTimer = () => {
+        clearTimeout(this.timerID)
+        this.timerID = setTimeout(() => {
+            this.logout()
+        }, config.idleTimeout * 60 * 60 * 1000);
     }
     onCopy = (i) => {
         const { status } = this.state
@@ -39,6 +55,7 @@ class App extends React.Component {
         console.log(`texts: ${JSON.stringify(this.state.texts)}`)
         console.log(`status: ${JSON.stringify(status)}`)
         this.setState({ status })
+        this.resetTimer()
     }
     delete = (i) => {
         console.log(`delete i: ${i}`)
@@ -49,18 +66,20 @@ class App extends React.Component {
         console.log(`texts: ${JSON.stringify(texts)}`)
         console.log(`status: ${JSON.stringify(status)}`)
         this.setState({ texts, status })
+        this.resetTimer()
     }
     loginCallback = (user, token) => {
         this.setState({ token, isLogin: true, user })
         console.log(`this.state: ${JSON.stringify(this.state)}`)
         this.websocketHandler()
+        this.resetTimer()
     }
     websocketHandler = () => {
         this.wsclient = new W3CWebSocket(config.wserver)
         this.wsclient.onopen = () => {
             console.log("websocket client connected");
             this.wsclient.send(JSON.stringify({ token: this.state.token, event: "text" }))
-            this.timerID = setInterval(() => { this.wsclient.send('{"event":"PING"}'); }, config.pingInterval)
+            this.intervalID = setInterval(() => { this.wsclient.send('{"event":"PING"}'); }, config.pingInterval)
         };
         this.wsclient.onmessage = (message) => {
             console.log(message)
@@ -83,7 +102,7 @@ class App extends React.Component {
         }
         this.wsclient.onclose = () => {
             console.log('websocket closed')
-            clearInterval(this.timerID)
+            clearInterval(this.intervalID)
             this.setState({ isLogin: false })
         }
 
@@ -98,18 +117,22 @@ class App extends React.Component {
         push({ headers }, data).then(res => {
             console.log(`res: ${JSON.stringify(res.data)}`)
         })
+        this.resetTimer()
 
     }
     logout = () => {
         console.log('logout')
-        clearInterval(this.timerID)
-        this.wsclient.close()
-        this.wsclient = null
+        clearInterval(this.intervalID)
+        if (this.wsclient !== null) {
+            this.wsclient.close()
+            this.wsclient = null
+        }
         this.setState(initialState)
     }
 
     clearAll = () => {
         this.setState({ texts: [], status: [] })
+        this.resetTimer()
     }
     render() {
         const { isLogin, user, status } = this.state
@@ -121,7 +144,7 @@ class App extends React.Component {
             <div>
                 {loginOrGreeting}
                 <Sender disable={!isLogin} onClick={this.send}></Sender>
-                {this.state.texts.length > 0 ? <Button className="clearAll" variant="contained" color="primary" onClick={this.clearAll}>clearAll</Button> : null}
+                {this.state.texts.length > 0 ? <MyButton className="clearAll" variant="contained" color="primary" onClick={this.clearAll}>clearAll</MyButton> : null}
                 <ul>
                     {
                         this.state.texts.map((text, i) => {
@@ -131,6 +154,7 @@ class App extends React.Component {
                                     id={i} key={i}
                                     onCopy={this.onCopy.bind(this, i)}
                                     text={t.message}
+                                    timestamp={dateFormat(new Date(t.timestamp * 1000), "H:MM:ss yyyy/mm/dd")}
                                     onDelete={() => { this.delete(i) }}
                                     status={status[i]}
                                 ></TextItem>

@@ -32,6 +32,7 @@ export default props => {
         </Button>
 
     const text = <span className="text">{props.text}</span>
+    const timestamp = <span className="timestamp">{props.timestamp}</span>
     const status = <span className="status">
         {props.status}
     </span>
@@ -40,6 +41,7 @@ export default props => {
             {copyElem}
             {deleteBtn}
             {text}
+            {timestamp}
             {status}
         </li>
     )
