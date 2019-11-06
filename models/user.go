@@ -51,7 +51,7 @@ func Login(user *types.User) (err error) {
 		var password string
 		rows.Scan(&password)
 		if password != user.Password {
-			err = fmt.Errorf("User and password not match")
+			err = fmt.Errorf("Wrong password")
 			return
 		}
 		return nil

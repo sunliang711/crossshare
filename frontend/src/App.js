@@ -1,8 +1,6 @@
 import React from "react";
 
 import { w3cwebsocket as W3CWebSocket } from 'websocket';
-import axios from 'axios';
-import TextItem from './TextItem'
 import Login from './Login'
 import Sender from './sender'
 import config from "./config"
@@ -10,7 +8,6 @@ import Logout from './logout'
 import { push } from './api'
 import Button from "@material-ui/core/Button"
 import { styled } from "@material-ui/core/styles"
-import dateFormat from 'dateformat';
 import CardItem from './CardItem';
 
 // const client = new W3CWebSocket(config.wserver)

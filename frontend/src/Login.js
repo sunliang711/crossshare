@@ -5,6 +5,9 @@ import TextField from '@material-ui/core/TextField'
 import Button from '@material-ui/core/Button'
 import Checkbox from '@material-ui/core/Checkbox'
 import FormControlLabel from '@material-ui/core/FormControlLabel';
+import { toast } from 'react-toastify';
+import { ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 import "./Login.css"
 
 // const Login2 = props => {
@@ -137,7 +140,8 @@ class Login extends React.Component {
                         label="remember user"
                     />
                     <Button className="submitBtn" disabled={this.state.user === '' || this.state.password === ''} variant="contained" color="primary" onClick={this.submit.bind(this, this.props.callback)}>submit</Button>
-                    <span className="loginStatus">{this.state.status}</span>
+                    {/* <span className="loginStatus">{this.state.status}</span> */}
+                    <ToastContainer />
 
                 </form>
             </div>
@@ -166,7 +170,8 @@ class Login extends React.Component {
                     }
                 } else {
                     console.log("login failed")
-                    this.setState({ status: res.data.msg })
+                    // this.setState({ status: res.data.msg })
+                    toast.error(res.data.msg)
                 }
             }
         )
